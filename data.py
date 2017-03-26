@@ -171,6 +171,19 @@ class Data:
 
 		return X_batch, y_batch
 
+	def get_first_x_mnist(self, batch_size, n_classes):
+		# Used for getting the style of a digit, and then reproducing it along with the other 9 digits.
+
+		# TODO: implement for SVHN
+		assert(self.dataset == 'MNIST')
+		assert(batch_size % n_classes == 0)
+		n = int(batch_size / n_classes)
+
+		X = self.mnist.test.images[:n]
+		y = self.mnist.test.labels[:n]
+
+		return X, y
+
 	def get_random_minibatch(self, batch_size, n_classes, purpose='train_few'):
 		assert(purpose in ['train_few', 'train', 'test'])
 

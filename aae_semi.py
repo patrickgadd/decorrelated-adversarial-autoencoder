@@ -212,8 +212,56 @@ class AAE_Semi():
 		accuracy = self.sess.run(accuracy, {self.input_x: input_x, self.target_y: target_y})
 		return accuracy
 
+	def generate_similar_style(self, X_labelled, y_labelled, batch_size, directory, img_res, img_channels, n_classes, z_dim):
+		assert(batch_size % n_classes == 0)
+
+		# TODO: implement for SVHN
+		assert(img_channels == 1)
+
+		n = int(batch_size / n_classes)
+		X_labelled = np.repeat(X_labelled, n, axis=0)
+		y_labelled = np.repeat(y_labelled, n, axis=0)
+
+		q_yz_given_x = self.sess.run(self.q_yz_given_x, {self.input_x: X_labelled})
+		q_z_given_x = q_yz_given_x[:,n_classes:] # Only pick the first N samples, and only the style hereof
+
+		indices = []
+		for i in range(batch_size):
+			indices.append(i % n_classes)
+		indices = np.asarray(indices)
+		p_y = np.zeros((batch_size, n_classes))
+		p_y[np.arange(batch_size), indices] = 1
+
+		p_yz = np.concatenate([p_y, q_z_given_x], axis=1)
+
+		imgs = self.sess.run(self.sampled_style_digits, {self.dummy_p_yz: p_yz})
+
+
+		combined_img = np.zeros((n*img_res, (n_classes+1)*img_res))
+		# The left column the is the original images
+		for i in range(n):
+			combined_img[i*img_res:(i+1)*img_res, 0:img_res] = X_labelled[i*n_classes].reshape(img_res, img_res)
+
+		# The remaining ones are the digits produced from the style captured from the original imgs
+		for r in range(n):
+			for c in range(n_classes):
+
+				img = imgs[r*n_classes+c].reshape(img_res, img_res)
+				combined_img[r*img_res:(1+r)*img_res, (c+1)*img_res:(c+2)*img_res] = img
+
+		imgs_folder = os.path.join(directory, 'imgs')
+		if not os.path.exists(imgs_folder):
+			os.makedirs(imgs_folder)
+
+		imsave(os.path.join(imgs_folder, 'captured_digit_style.png'), combined_img)
+
+
 	def generate_digits(self, batch_size, directory, img_res, img_channels, n_classes, z_dim):
 		assert(batch_size % n_classes == 0)
+
+		# TODO: implement for SVHN
+		assert(img_channels == 1)
+
 		for n in range(3):
 			indices = []
 			for i in range(batch_size):
@@ -236,14 +284,16 @@ class AAE_Semi():
 
 			imgs = self.sess.run(self.sampled_style_digits, {self.dummy_p_yz: p_yz})
 
-			for k in range(imgs.shape[0]):
-				imgs_folder = os.path.join(directory, 'imgs')
-				if not os.path.exists(imgs_folder):
-					os.makedirs(imgs_folder)
+			combined_img = np.zeros((int(batch_size/n_classes)*img_res, n_classes*img_res))
 
-				if img_channels == 1:
-					img = imgs[k].reshape(img_res, img_res)
-				else:
-					img = imgs[k].reshape(img_res, img_res, img_channels)
+			for r in range(int(batch_size/n_classes)):
+				for c in range(n_classes):
 
-				imsave(os.path.join(imgs_folder, '{0}_digit_styles_{1}.png'.format(n ,k)), img)
+					img = imgs[r*n_classes+c].reshape(img_res, img_res)
+					combined_img[r*img_res:(1+r)*img_res, c*img_res:(c+1)*img_res] = img
+
+			imgs_folder = os.path.join(directory, 'imgs')
+			if not os.path.exists(imgs_folder):
+				os.makedirs(imgs_folder)
+
+			imsave(os.path.join(imgs_folder, 'digit_style_{0}.png'.format(n)), combined_img)
