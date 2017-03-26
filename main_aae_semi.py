@@ -17,10 +17,10 @@ logging = tf.logging
 flags.DEFINE_integer("batch_size", 100, "batch size")
 flags.DEFINE_integer("max_epoch", 50, "max epoch")
 flags.DEFINE_integer("updates_per_iteration", 100, "number of updates per iteration")
-flags.DEFINE_float("learning_rate", 0.003, "learning rate")
+flags.DEFINE_float("learning_rate", 0.0003, "learning rate")
 flags.DEFINE_string("working_directory", "./data", "the directory in which the results will be stored")
-flags.DEFINE_integer("z_dim", 10, "dimensionality of the z space")
-flags.DEFINE_float("network_scale", 2.0, "scaling the number of neurons/filters in the network")
+flags.DEFINE_integer("z_dim", 12, "dimensionality of the z space")
+flags.DEFINE_float("network_scale", 1.5, "scaling the number of neurons/filters in the network")
 flags.DEFINE_float("decorrelation_importance", 0.5, "The importance of the de-correlation of q(y|X) and q(z|X)")
 flags.DEFINE_integer("cnt_per_class", 10, "Number of labelled examples per class")
 
@@ -78,15 +78,13 @@ if __name__ == "__main__":
 
 
 
-	for iteration_n in range(start_iteration_n, max_iteration ):
+	for iteration_n in range(start_iteration_n, max_iteration+1 ):
 		epoch = iteration_n * FLAGS.updates_per_iteration / updates_per_epoch
 		print('Beginning epoch {0}'.format(epoch))
 
-		if epoch >= 1:
-			learning_rate = 0.0003
 		if epoch >= 5:
 			learning_rate = 0.00003
-		if epoch >= 10:
+		if epoch >= 15:
 			learning_rate = 0.000003
 
 		reconstruction_loss = 0.0
@@ -116,12 +114,12 @@ if __name__ == "__main__":
 
 			loss_value = model.correlation_classifier_phase(img_batch_unlabelled, learning_rate)
 			corr_classification_loss += loss_value
-			if iteration_n > 5:
-				loss_value = model.decorrelation_phase(img_batch_unlabelled, learning_rate)
-				decorr_classification_loss += loss_value
+
+			loss_value = model.decorrelation_phase(img_batch_unlabelled, learning_rate)
+			decorr_classification_loss += loss_value
 
 
-		if iteration_n % 5 == 0:
+		if int(epoch * 100) % 20 == 0:
 			reconstruction_loss = reconstruction_loss / (FLAGS.updates_per_iteration * FLAGS.batch_size)
 			print('Reconstruction loss: {0}'.format(reconstruction_loss))
 
@@ -142,6 +140,10 @@ if __name__ == "__main__":
 			model.test_print_q_z_given_x(img_batch_unlabelled)
 
 			# Produce imagery
+			X, y = data.get_first_x_mnist(FLAGS.batch_size, n_classes)
+			model.generate_similar_style(X, y, FLAGS.batch_size, FLAGS.working_directory, img_res, img_channels, n_classes, FLAGS.z_dim)
+
+			print('TODO: update this')
 			model.generate_digits(FLAGS.batch_size, FLAGS.working_directory, img_res, img_channels, n_classes, FLAGS.z_dim)
 
 		# Logging
