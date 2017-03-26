@@ -220,7 +220,6 @@ class AAE_Semi():
 
 		n = int(batch_size / n_classes)
 		X_labelled = np.repeat(X_labelled, n, axis=0)
-		y_labelled = np.repeat(y_labelled, n, axis=0)
 
 		q_yz_given_x = self.sess.run(self.q_yz_given_x, {self.input_x: X_labelled})
 		q_z_given_x = q_yz_given_x[:,n_classes:] # Only pick the first N samples, and only the style hereof
@@ -297,3 +296,48 @@ class AAE_Semi():
 				os.makedirs(imgs_folder)
 
 			imsave(os.path.join(imgs_folder, 'digit_style_{0}.png'.format(n)), combined_img)
+
+	def interpolate_digits(self, batch_size, directory, img_res, img_channels, n_classes, z_dim):
+		assert(batch_size % n_classes == 0)
+
+		# TODO: implement for SVHN
+		assert(img_channels == 1)
+
+		for n in range(3):
+			indices = []
+			for i in range(batch_size):
+				indices.append(i % n_classes)
+			indices = np.asarray(indices)
+			p_y = np.zeros((batch_size, n_classes))
+			p_y[np.arange(batch_size), indices] = 1
+
+			p_z_1 = np.random.normal(0, 1.0, (1, z_dim))
+			p_z_2 = np.random.normal(0, 1.0, (1, z_dim))
+			p_z = np.zeros((batch_size, z_dim), dtype='float32')
+			N = int(batch_size / n_classes)
+			for i in range(N):
+				interpol = i / float(N-1)
+				rnd_z = p_z_1 * interpol + p_z_2 * (1-interpol)
+
+				# Use the same random Z for digits 0..9 to see the different digits of the same style.
+				for j in range(n_classes):
+					p_z[i*n_classes + j] = rnd_z
+
+
+			p_yz = np.concatenate([p_y, p_z], axis=1)
+
+			imgs = self.sess.run(self.sampled_style_digits, {self.dummy_p_yz: p_yz})
+
+			combined_img = np.zeros((int(batch_size/n_classes)*img_res, n_classes*img_res))
+
+			for r in range(int(batch_size/n_classes)):
+				for c in range(n_classes):
+
+					img = imgs[r*n_classes+c].reshape(img_res, img_res)
+					combined_img[r*img_res:(1+r)*img_res, c*img_res:(c+1)*img_res] = img
+
+			imgs_folder = os.path.join(directory, 'imgs')
+			if not os.path.exists(imgs_folder):
+				os.makedirs(imgs_folder)
+
+			imsave(os.path.join(imgs_folder, 'digit_style_interpolation_{0}.png'.format(n)), combined_img)

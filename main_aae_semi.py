@@ -142,9 +142,8 @@ if __name__ == "__main__":
 			# Produce imagery
 			X, y = data.get_first_x_mnist(FLAGS.batch_size, n_classes)
 			model.generate_similar_style(X, y, FLAGS.batch_size, FLAGS.working_directory, img_res, img_channels, n_classes, FLAGS.z_dim)
-
-			print('TODO: update this')
 			model.generate_digits(FLAGS.batch_size, FLAGS.working_directory, img_res, img_channels, n_classes, FLAGS.z_dim)
+			model.interpolate_digits(FLAGS.batch_size, FLAGS.working_directory, img_res, img_channels, n_classes, FLAGS.z_dim)
 
 		# Logging
 		if int(epoch * 100) % 50 == 0:
