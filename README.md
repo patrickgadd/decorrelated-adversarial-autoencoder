@@ -1,6 +1,15 @@
 # decorrelated-adversarial-autoencoder
 Tensorflow implementation of Adversarial Autoencoders (with extra option to decorrelate style and classes)
 
+## How it works
+
+This is a semi-supervised adversarial autoencoder as described in the original paper by Allreza Makhzani et al: [arxiv.org/abs/1511.05644](https://arxiv.org/abs/1511.05644)
+
+I added the possibility to de-correlate the style and class to allow for nice sampling of the style space, and because without this, q(y|X) could be predicted with 60-80% accuracy from q(z|X), meaning that they were heavily correlated and that q(z|X) did not only contain information about the style, but also about the digit in the image, effectively making class-information surpass q(y|X)
+
+![Network architecture](https://raw.githubusercontent.com/patrickgadd/decorrelated-adversarial-autoencoder/master/assets/decorrelator-network-01.png)
+
+# Examples
 
 ## Capturing the style of real examples
 
