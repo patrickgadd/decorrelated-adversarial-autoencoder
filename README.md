@@ -3,11 +3,13 @@ Tensorflow implementation of Adversarial Autoencoders (with extra option to deco
 
 ## How it works
 
-This is a semi-supervised adversarial autoencoder as described in the original paper by Allreza Makhzani et al: [arxiv.org/abs/1511.05644](https://arxiv.org/abs/1511.05644)
+This is a semi-supervised adversarial autoencoder as described in the original paper by Allreza Makhzani et al ([arxiv.org/abs/1511.05644](https://arxiv.org/abs/1511.05644)) with the following modification:
 
-I added the possibility to de-correlate the style and class to allow for nice sampling of the style space, and because without this, q(y|X) could be predicted with 60-80% accuracy from q(z|X), meaning that they were heavily correlated and that q(z|X) did not only contain information about the style, but also about the digit in the image, effectively making class-information surpass q(y|X)
+I added the possibility to de-correlate the style and class to allow for nice sampling of the style space, and because without this, q(y|X) could be predicted with 60-80% accuracy from q(z|X), meaning that they were heavily correlated and that q(z|X) did not only contain information about the style, but also about the digit in the image, effectively making class-information surpass q(y|X). Adding de-correlation results in that the classifying part of the network only achieve 10% accuracy in predicting q(y|X) from q(z|X), which can be interpreted as there being no correlation at all for the 10 MNIST classes.
 
 ![Network architecture](https://raw.githubusercontent.com/patrickgadd/decorrelated-adversarial-autoencoder/master/assets/decorrelator-network-01.png)
+
+(modified version of Figure 8 from the original paper)
 
 # Examples
 
